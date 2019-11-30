@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Ignore google data folder
+Takeout/
+
+# Ignore the NZ map I saved
+*nz*
