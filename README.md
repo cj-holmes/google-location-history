@@ -72,7 +72,7 @@ the building of this markdown document - hence the commented out lines.
 load(file="nz_map_stamen_tonerlite_zoom7.Rdata")
 ```
 
-### Reduce data
+### Reduce location data
 
 As the raw JSON contains all of my location history data, here I reduce
 it to just records within the New Zealand bounding box. I also filter to
@@ -92,58 +92,50 @@ nz_df <-
 
 ``` r
 ggmap(nz_map) + 
-  geom_rect(aes(xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf), fill="white", alpha=0.2)+
   geom_point(data = nz_df, aes(lon, lat, col=as.numeric(myts), size=acc))+
   geom_segment(data = nz_df, aes(x=xstart, xend=xend, y=ystart, yend=yend))+
-  scale_color_viridis_c(option = "plasma", end=0.9, alpha=1,
-                        breaks=as.numeric(range(nz_df$myts)),
+  scale_color_viridis_c(breaks=as.numeric(range(nz_df$myts)),
                         labels=format(range(nz_df$myts), "%d %b %Y"))+
-  scale_size(range=c(2,6), guide = FALSE)+
+  scale_size(range=c(1.5,6), guide = FALSE)+
   theme_bw()+
-  theme(legend.position = "right")+
+  theme(legend.position = c(0.21, 0.85),
+        legend.background = element_rect(fill=NA),
+        legend.text = element_text(size=8))+
   labs(x = "Longitude",
        y = "Latitude",
        title = "Honeymoon down under",
-       subtitle = "Google location tracking",
+       subtitle = "Google location history",
        colour = "")
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-8-1.png" style="display: block; margin: auto;" />
 
-### Attempting density visualisation
+## Density
 
-I want to raster a 2D density estimate of the location history. I’ve
-done something similat using `geom_density_2d()`, but I want to be able
-remove density tiles below a certain threshold, so the density estimate
-does not cover the whole map (only loaclised areas of high density) - so
-I here I gave a go at producing that view.
+I’ll want a slightly darker map for the density view - purely
+aesthetics.
 
 ``` r
-# Create the 2D density estimate
-de2d <- MASS::kde2d(nz_df$lon, nz_df$lat, h=c(0.3,0.3), n=200, lims=nz_box)
-
-# Wrangle the density estimate into a dataframe for use with geom_tile()
-dendf <- 
-  crossing(lat = de2d$y, lon = de2d$x) %>% 
-  mutate(z = as.vector(de2d$z),
-         z = z - min(z),
-         z = z/max(z)) %>%  
-  filter(z >= 0.0000001) # Only keep tiles above a certain density threshold
+# nz_map_dark <- get_stamenmap(bbox = nz_box, maptype = "toner", zoom=7)
+#save(nz_map_dark, file="nz_map_dark_stamen_tonerlite_zoom7.Rdata")
+load(file="nz_map_dark_stamen_tonerlite_zoom7.Rdata")
 ```
 
-Visulise the plot with a `geom_tile()` layer
+Create plot using `stat_density_2d()` and an alpha scale that gives me
+the look I want.
 
 ``` r
-ggmap(nz_map) + 
-  geom_rect(aes(xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf), fill="white", alpha=0.2)+
-  geom_tile(data = dendf, aes(lon, lat, fill=z), alpha=0.75)+
-  scale_fill_viridis_c(option = "plasma", guide=FALSE)+
+ggmap(nz_map_dark) + 
+  stat_density_2d(data = nz_df, 
+                  aes(lon, lat, fill=stat(density), alpha=stat(ndensity)), 
+                  geom="tile", contour = FALSE, h = 1, show.legend = FALSE)+
+  scale_fill_viridis_c(option="magma")+
+  scale_alpha_continuous(range = c(0.7, 1))+
   theme_bw()+
   labs(x = "Longitude",
        y = "Latitude",
        title = "Honeymoon down under",
-       subtitle = "Google location tracking",
-       fill = "")
+       subtitle = "Google location history")
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
