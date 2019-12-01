@@ -61,6 +61,10 @@ website <http://bboxfinder.com> which was useful for this.
 
 ``` r
 nz_box <- c(left= 166, right=179, bottom=-47.5, top=-34)
+
+# Assign Christchurch and Auckland airport coordinates
+chc <- c(172.5369, -43.4864)
+akl <- c(174.7850, -37.0082)
 ```
 
 Get map using ggmap(). Here I have saved the map locally and load it in
@@ -94,7 +98,8 @@ nz_df <-
 ggmap(nz_map) + 
   geom_point(data = nz_df, aes(lon, lat, col=as.numeric(myts), size=acc))+
   geom_segment(data = nz_df, aes(x=xstart, xend=xend, y=ystart, yend=yend))+
-  scale_color_viridis_c(breaks=as.numeric(range(nz_df$myts)),
+  geom_segment(aes(x=chc[1], y=chc[2], xend=akl[1], yend=akl[2]), lty=2)+ # Add flight segment
+  scale_color_viridis_c(option="plasma", breaks=as.numeric(range(nz_df$myts)),
                         labels=format(range(nz_df$myts), "%d %b %Y"))+
   scale_size(range=c(1.5,6), guide = FALSE)+
   theme_bw()+
