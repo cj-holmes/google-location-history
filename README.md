@@ -1,8 +1,8 @@
 Visualising Google location data in R
 ================
 
-Having a go at visualising my Google location history data with R. It’s
-not perfect.
+Having a go at visualising my Google location history data with R for
+our Honeymoon in New Zealand, 2018. It’s not perfect.
 
 ## Required packages
 
